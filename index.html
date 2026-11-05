@@ -3,106 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROOT VAULT // MULTI-ASSET CELO</title>
+  <title>RDESK VAULT // WEB3</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
     :root {
-      --bg: #050505; --card: #0a0a0c;
-      --matrix: #00ff66; --matrix-dim: rgba(0, 255, 102, 0.2);
-      --cyan: #00f3ff; --alert: #ff3333; --usdt: #26a17b;
+      --bg-dark: #0a0a0f;
+      --glass-bg: rgba(20, 20, 25, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --cyan: #00f3ff;
+      --pink: #ff007f;
+      --dichroic: linear-gradient(135deg, var(--cyan), var(--pink));
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
     }
+
     body {
-      background: var(--bg); color: #ccc; font-family: 'Courier New', monospace;
-      margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh;
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.05), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(255, 0, 127, 0.05), transparent 25%);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      margin: 0; padding: 20px;
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
     }
-    .terminal {
-      width: 100%; max-width: 450px; background: var(--card);
-      border: 1px solid var(--matrix); border-radius: 4px; padding: 20px;
-      box-shadow: 0 0 15px var(--matrix-dim); display: flex; flex-direction: column; gap: 15px;
+
+    .app-card {
+      width: 100%; max-width: 420px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 30px 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; gap: 20px;
     }
+
     .header {
-      color: var(--matrix); font-size: 1.2rem; font-weight: bold; text-align: center; 
-      text-shadow: 0 0 5px var(--matrix); letter-spacing: 2px; border-bottom: 1px dashed #333; padding-bottom: 10px;
+      text-align: center;
+      margin-bottom: 10px;
     }
-    input, select {
-      width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: var(--cyan);
-      font-family: inherit; font-size: 1rem; box-sizing: border-box; text-align: center; margin-bottom: 10px;
-      appearance: none;
+
+    .header h1 {
+      font-size: 1.4rem; font-weight: 700; margin: 0;
+      background: var(--dichroic);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
     }
-    input:focus, select:focus { outline: none; border-color: var(--matrix); }
+
+    .header p { color: var(--text-muted); font-size: 0.85rem; margin: 5px 0 0 0; }
+
+    input, textarea, select {
+      width: 100%; padding: 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem; box-sizing: border-box; transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none; border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.15);
+    }
+
+    textarea { resize: none; height: 100px; line-height: 1.5; }
+
     button {
-      width: 100%; padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
-      background: #111; color: var(--matrix); border: 1px solid var(--matrix); transition: 0.2s; text-transform: uppercase;
+      width: 100%; padding: 16px;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.95rem;
+      cursor: pointer; border-radius: 12px; border: none;
+      transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    button:hover { background: var(--matrix); color: #000; }
-    .btn-action { background: linear-gradient(90deg, var(--matrix), var(--cyan)); color: #000; border: none; }
-    .btn-action:hover { filter: brightness(1.2); }
-    .data-box { background: #000; padding: 12px; border: 1px solid #333; word-break: break-all; color: var(--cyan); font-size: 0.85rem; text-align: center;}
+
+    .btn-primary {
+      background: var(--dichroic); color: #fff;
+      box-shadow: 0 4px 15px rgba(255, 0, 127, 0.2);
+    }
+    .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent; color: var(--text-main);
+      border: 1px solid var(--glass-border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+
+    .balances {
+      display: flex; gap: 15px;
+    }
     
-    /* Layout de Saldos */
-    .balances { display: flex; justify-content: space-around; margin: 10px 0; }
-    .asset-box { text-align: center; }
-    .asset-name { font-size: 0.8rem; color: #888; }
-    .asset-value { font-size: 1.6rem; font-weight: bold; }
-    .val-celo { color: var(--matrix); text-shadow: 0 0 8px var(--matrix-dim); }
-    .val-usdt { color: var(--usdt); text-shadow: 0 0 8px rgba(38, 161, 123, 0.4); }
+    .asset-box {
+      flex: 1; background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border); border-radius: 16px;
+      padding: 15px; text-align: center;
+    }
+    
+    .asset-name { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+    .asset-value { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; margin-top: 5px; }
+    
+    .val-celo { color: var(--text-main); }
+    .val-usdt { color: #26a17b; }
+
+    .qr-container {
+      background: #fff; padding: 15px; border-radius: 16px;
+      display: flex; justify-content: center; margin: 0 auto; width: fit-content;
+    }
+
+    .address-pill {
+      background: rgba(0, 243, 255, 0.1); border: 1px solid rgba(0, 243, 255, 0.2);
+      color: var(--cyan); padding: 10px; border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      text-align: center; word-break: break-all; margin-top: 15px;
+    }
+
+    .card-section {
+      background: rgba(0,0,0,0.15); border: 1px solid var(--glass-border);
+      border-radius: 16px; padding: 20px;
+    }
+
+    .section-title {
+      font-size: 0.8rem; color: var(--text-muted); font-weight: 700;
+      margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
+    }
 
     .hidden { display: none !important; }
-    #qrcode { display: flex; justify-content: center; margin: 15px 0; padding: 10px; background: #fff; border-radius: 4px; }
   </style>
 </head>
 <body>
 
-<div class="terminal">
-  <div class="header">SYS // ROOT_VAULT</div>
-
-  <!-- SETUP E DESBLOQUEIO -->
-  <div id="view-auth">
-    <div id="auth-msg" style="text-align:center; color:#888; margin-bottom:15px;"></div>
-    <input type="password" id="pin-input" placeholder="DIGITE O PIN (MÍN. 4 DÍGITOS)">
-    <button class="btn-action" onclick="authenticate()">[ EXECUTAR ]</button>
+<div class="app-card">
+  <div class="header">
+    <h1>RDESK VAULT</h1>
+    <p>Decentralized Celo OS</p>
   </div>
 
-  <!-- PAINEL OPERACIONAL -->
+  <!-- TELA INICIAL: ESCOLHA DE ROTA -->
+  <div id="view-start" class="hidden">
+    <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Nenhum cofre detectado neste dispositivo.</p>
+    <button class="btn-primary" style="margin-bottom: 12px;" onclick="showView('view-create')">Criar Nova Carteira</button>
+    <button class="btn-secondary" onclick="showView('view-restore')">Restaurar 12 Palavras</button>
+  </div>
+
+  <!-- TELA: CRIAR CARTEIRA -->
+  <div id="view-create" class="hidden">
+    <div class="section-title">GERAR NOVO COFRE</div>
+    <input type="password" id="pin-create" placeholder="Crie um PIN (Mín. 4 dígitos)">
+    <button class="btn-primary" style="margin-top:10px;" onclick="createNewWallet()">Gerar e Encriptar</button>
+    <button class="btn-secondary" style="margin-top:10px;" onclick="showView('view-start')">Voltar</button>
+  </div>
+
+  <!-- TELA: RESTAURAR CARTEIRA -->
+  <div id="view-restore" class="hidden">
+    <div class="section-title">RESTAURAR COFRE EXISTENTE</div>
+    <textarea id="mnemonic-input" placeholder="Cole aqui suas 12 palavras separadas por espaço..."></textarea>
+    <input type="password" id="pin-restore" placeholder="Crie um PIN para este dispositivo">
+    <button class="btn-primary" style="margin-top:10px;" onclick="restoreWallet()">Restaurar Acesso</button>
+    <button class="btn-secondary" style="margin-top:10px;" onclick="showView('view-start')">Voltar</button>
+  </div>
+
+  <!-- TELA: DESBLOQUEAR -->
+  <div id="view-unlock" class="hidden">
+    <div class="section-title" style="justify-content:center;">DESBLOQUEAR COFRE LOCAL</div>
+    <input type="password" id="pin-unlock" placeholder="Digite seu PIN">
+    <button class="btn-primary" style="margin-top:10px;" onclick="unlockWallet()">Acessar</button>
+    <button class="btn-secondary" style="margin-top:10px; color:var(--danger); border-color:rgba(239, 68, 68, 0.3);" onclick="nukeVault()">Destruir Cofre (Sair)</button>
+  </div>
+
+  <!-- TELA: DASHBOARD PRINCIPAL -->
   <div id="view-dashboard" class="hidden">
     
     <div class="balances">
       <div class="asset-box">
         <div class="asset-name">CELO</div>
-        <div class="asset-value val-celo" id="bal-celo">0.000</div>
+        <div class="asset-value val-celo" id="bal-celo">...</div>
       </div>
       <div class="asset-box">
         <div class="asset-name">USDT</div>
-        <div class="asset-value val-usdt" id="bal-usdt">0.00</div>
+        <div class="asset-value val-usdt" id="bal-usdt">...</div>
       </div>
     </div>
-    <button onclick="updateBalances()" style="padding: 8px; margin-bottom:15px; font-size:0.8rem;">[ ATUALIZAR SALDOS ]</button>
+    <button class="btn-secondary" onclick="updateBalances()" style="padding: 10px; font-size:0.8rem; margin-bottom: 10px;">Atualizar Saldos</button>
 
-    <div style="border:1px dashed #333; padding:15px; margin-bottom:15px;">
-      <div style="text-align:center; color:var(--cyan);">> ENDEREÇO DE RECEBIMENTO</div>
-      <div style="text-align:center; font-size:0.7rem; color:#888;">(Aceita CELO e USDT na rede Celo)</div>
-      <div id="qrcode"></div>
-      <div class="data-box" id="wallet-address">0x...</div>
+    <!-- RECEBER -->
+    <div class="card-section">
+      <div class="section-title">✦ RECEBER</div>
+      <div class="qr-container" id="qrcode"></div>
+      <div class="address-pill" id="wallet-address">0x...</div>
     </div>
 
-    <div style="border:1px dashed #333; padding:15px; margin-bottom:15px;">
-      <div style="text-align:center; color:var(--alert); margin-bottom:10px;">> TRANSMITIR ATIVO</div>
-      
-      <select id="tx-asset">
-        <option value="celo">Mudar ativo: CELO</option>
-        <option value="usdt">Mudar ativo: USDT (Celo Network)</option>
+    <!-- ENVIAR -->
+    <div class="card-section">
+      <div class="section-title">✦ TRANSFERIR</div>
+      <select id="tx-asset" style="margin-bottom: 10px;">
+        <option value="celo">Ativo: CELO Nativo</option>
+        <option value="usdt">Ativo: USDT (Rede Celo)</option>
       </select>
-
-      <input type="text" id="tx-to" placeholder="Endereço Destino (0x...)">
-      <input type="number" id="tx-amount" placeholder="Quantia (ex: 5.50)" step="any">
-      <button class="btn-action" onclick="sendTransaction()" id="btn-send">[ ASSINAR E ENVIAR ]</button>
+      <input type="text" id="tx-to" placeholder="Endereço (0x...)" style="margin-bottom: 10px;">
+      <input type="number" id="tx-amount" placeholder="Quantia" step="any" style="margin-bottom: 15px;">
+      <button class="btn-primary" onclick="sendTransaction()" id="btn-send">Assinar e Enviar</button>
     </div>
 
-    <button style="border-color:var(--alert); color:var(--alert);" onclick="location.reload()">[ TRAVAR COFRE ]</button>
+    <button class="btn-secondary" style="margin-top:10px;" onclick="location.reload()">Travar Cofre (Lock)</button>
   </div>
+
 </div>
 
 <script>
@@ -110,15 +221,10 @@
   const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
   let activeWallet = null;
 
-  // Endereço e ABI mínimos do USDT na Celo
   const USDT_ADDRESS = "0x48065fbBE25f71C9282ddf5e1cD6D6A8824272d4";
-  const ERC20_ABI = [
-    "function balanceOf(address owner) view returns (uint256)",
-    "function decimals() view returns (uint8)",
-    "function transfer(address to, uint amount) returns (bool)"
-  ];
+  const ERC20_ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function transfer(address, uint) returns (bool)"];
 
-  // --- MOTOR CRIPTOGRÁFICO AES-GCM ---
+  // --- CRIPTOGRAFIA AES-GCM ---
   const cryptoAPI = window.crypto;
   async function getDerivationKey(pin, salt) {
     const enc = new TextEncoder();
@@ -136,118 +242,4 @@
   }
   async function decryptData(payload, pin) {
     const data = JSON.parse(payload), key = await getDerivationKey(pin, new Uint8Array(data.salt));
-    const decrypted = await cryptoAPI.subtle.decrypt({name: "AES-GCM", iv: new Uint8Array(data.iv)}, key, new Uint8Array(data.cipher));
-    return new TextDecoder().decode(decrypted);
-  }
-
-  // --- LÓGICA DE INTERFACE ---
-  window.onload = () => {
-    const msg = document.getElementById('auth-msg');
-    msg.innerText = localStorage.getItem('root_key') ? "> COFRE DETECTADO. INSIRA O PIN PARA ABRIR." : "> NOVO DISPOSITIVO. CRIE UM PIN PARA GERAR CHAVES.";
-  };
-
-  async function authenticate() {
-    const pin = document.getElementById('pin-input').value;
-    if (pin.length < 4) return alert("PIN curto demais.");
-    
-    const vault = localStorage.getItem('root_key');
-    
-    try {
-      if (!vault) {
-        const wallet = ethers.Wallet.createRandom();
-        localStorage.setItem('root_key', await encryptData(wallet.privateKey, pin));
-        alert("CRÍTICO: Anote estas 12 palavras. Se perder, perde o dinheiro:\n\n" + wallet.mnemonic.phrase);
-        activeWallet = wallet.connect(provider);
-      } else {
-        const privKey = await decryptData(vault, pin);
-        activeWallet = new ethers.Wallet(privKey, provider);
-      }
-      loadDashboard();
-    } catch(e) {
-      alert("Erro Crítico: PIN incorreto ou dados corrompidos.");
-    }
-  }
-
-  function loadDashboard() {
-    document.getElementById('view-auth').classList.add('hidden');
-    document.getElementById('view-dashboard').classList.remove('hidden');
-    
-    const address = activeWallet.address;
-    document.getElementById('wallet-address').innerText = address;
-    
-    document.getElementById('qrcode').innerHTML = "";
-    new QRCode(document.getElementById("qrcode"), {
-      text: address, width: 130, height: 130,
-      colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M
-    });
-
-    updateBalances();
-  }
-
-  // --- FUNÇÕES BLOCKCHAIN MULTI-ASSET ---
-  async function updateBalances() {
-    try {
-      document.getElementById('bal-celo').innerText = "...";
-      document.getElementById('bal-usdt').innerText = "...";
-
-      // LER CELO NATIVO (18 decimais)
-      const balanceWei = await provider.getBalance(activeWallet.address);
-      document.getElementById('bal-celo').innerText = parseFloat(ethers.formatEther(balanceWei)).toFixed(4);
-
-      // LER USDT (Contrato ERC-20)
-      const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
-      const usdtRaw = await usdtContract.balanceOf(activeWallet.address);
-      const usdtDecimals = await usdtContract.decimals(); // USDT costuma usar 6 decimais, não 18
-      document.getElementById('bal-usdt').innerText = parseFloat(ethers.formatUnits(usdtRaw, usdtDecimals)).toFixed(2);
-
-    } catch (e) {
-      document.getElementById('bal-celo').innerText = "ERR";
-      document.getElementById('bal-usdt').innerText = "ERR";
-    }
-  }
-
-  async function sendTransaction() {
-    const btn = document.getElementById('btn-send');
-    const asset = document.getElementById('tx-asset').value;
-    const to = document.getElementById('tx-to').value.trim();
-    const amount = document.getElementById('tx-amount').value;
-
-    if (!ethers.isAddress(to) || !amount || amount <= 0) return alert("Endereço ou quantia inválidos.");
-
-    try {
-      btn.innerText = "[ ASSINANDO... ]";
-      let tx;
-
-      if (asset === 'celo') {
-        // Envio de CELO Nativo
-        tx = await activeWallet.sendTransaction({
-          to: to,
-          value: ethers.parseEther(amount.toString())
-        });
-      } else {
-        // Envio de USDT ERC-20 (Interação com Smart Contract)
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, activeWallet);
-        const decimals = await usdtContract.decimals();
-        const parsedAmount = ethers.parseUnits(amount.toString(), decimals);
-        
-        // A chamada "transfer" gera a transação na rede
-        tx = await usdtContract.transfer(to, parsedAmount);
-      }
-      
-      btn.innerText = "[ TRANSMITIDO. AGUARDE... ]";
-      await tx.wait(); // Aguarda mineração
-      
-      alert("Sucesso! Transação confirmada no bloco.");
-      document.getElementById('tx-amount').value = '';
-      updateBalances();
-    } catch (e) {
-      console.error(e);
-      alert("Falha: " + (e.reason || e.message));
-    } finally {
-      btn.innerText = "[ ASSINAR E ENVIAR ]";
-    }
-  }
-</script>
-
-</body>
-</html>
+    const decrypted = await cryptoAPI.subtle.decrypt({name: "AES-GCM", iv: new Uint8Array(data.iv)}, key,

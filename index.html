@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pastelândia OS // Matrix PWA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #08080a;
+      --card-bg: #101014;
+      --matrix-green: #00ff66;
+      --cyan-neon: #00f3ff;
+      --btc-orange: #f7931a;
+      --pink-neon: #ff007f;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: #e0e0e0;
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .app-card {
+      width: 90%;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--matrix-green);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.15), inset 0 0 10px rgba(0, 243, 255, 0.05);
+      position: relative;
+    }
+
+    .matrix-title {
+      color: var(--matrix-green);
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+    }
+
+    .rainbow-button {
+      width: 100%;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: bold;
+      font-family: inherit;
+      color: #000;
+      background: linear-gradient(90deg, var(--matrix-green), var(--cyan-neon), var(--pink-neon), var(--btc-orange));
+      background-size: 300% 300%;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      animation: rainbowGlow 6s ease infinite;
+    }
+
+    @keyframes rainbowGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .address-box {
+      margin-top: 20px;
+      background: #000;
+      padding: 12px;
+      border: 1px dashed var(--cyan-neon);
+      border-radius: 6px;
+      word-break: break-all;
+      font-size: 0.8rem;
+      color: var(--cyan-neon);
+    }
+
+    .mnemonic-box {
+      margin-top: 15px;
+      background: #14050b;
+      padding: 12px;
+      border: 1px solid var(--pink-neon);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--pink-neon);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-card">
+    <div class="matrix-title">SYSTEM // ROOT_COIN</div>
+    
+    <div id="step-create">
+      <p style="font-size:0.85rem; color:#888;">NENHUM REGISTRO EXIGIDO. CHAVE GERADA NO SEU DISPOSITIVO.</p>
+      <button class="rainbow-button" onclick="createWallet()">[ CRIAR CARTEIRA CYPERPUNK ]</button>
+    </div>
+
+    <div id="step-wallet" style="display:none;">
+      <p style="color:var(--matrix-green); font-size:0.9rem;">> CARTEIRA ATIVA (CELO / EVM / MULTICHAIN):</p>
+      <div class="address-box" id="user-address">0x...</div>
+      
+      <button class="rainbow-button" style="margin-top:20px;" onclick="toggleMnemonic()">
+        [ BACKUP DE 12 PALAVRAS ]
+      </button>
+
+      <div class="mnemonic-box" id="user-mnemonic"></div>
+    </div>
+  </div>
+
+  <script>
+    function createWallet() {
+      // Gera carteira aleatória client-side via ethers.js (BIP-39)
+      const wallet = ethers.Wallet.createRandom();
+
+      document.getElementById('user-address').innerText = wallet.address;
+      document.getElementById('user-mnemonic').innerText = wallet.mnemonic.phrase;
+
+      // Armazena no localStorage do navegador do cliente
+      localStorage.setItem('pastel_priv_key', wallet.privateKey);
+
+      document.getElementById('step-create').style.display = 'none';
+      document.getElementById('step-wallet').style.display = 'block';
+    }
+
+    function toggleMnemonic() {
+      const box = document.getElementById('user-mnemonic');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Auto-carrega caso já exista no celular do cliente
+    window.onload = function() {
+      const savedKey = localStorage.getItem('pastel_priv_key');
+      if (savedKey) {
+        const wallet = new ethers.Wallet(savedKey);
+        document.getElementById('user-address').innerText = wallet.address;
+        document.getElementById('user-mnemonic').innerText = "(Chave privada salva localmente no navegador)";
+        document.getElementById('step-create').style.display = 'none';
+        document.getElementById('step-wallet').style.display = 'block';
+      }
+    };
+  </script>
+
+</body>
+</html>

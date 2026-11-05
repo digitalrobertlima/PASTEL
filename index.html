@@ -3,150 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pastelândia OS // Matrix PWA</title>
+  <title>ROOT VAULT // OFFLINE WALLET</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
   <style>
     :root {
-      --bg: #08080a;
-      --card-bg: #101014;
-      --matrix-green: #00ff66;
-      --cyan-neon: #00f3ff;
-      --btc-orange: #f7931a;
-      --pink-neon: #ff007f;
+      --bg: #050505;
+      --card: #0a0a0c;
+      --matrix: #00ff66;
+      --matrix-dim: rgba(0, 255, 102, 0.2);
+      --cyan: #00f3ff;
+      --pink: #ff007f;
+      --alert: #ff3333;
     }
-
     body {
-      background-color: var(--bg);
-      color: #e0e0e0;
-      font-family: 'Courier New', Courier, monospace;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      background: var(--bg); color: #ccc;
+      font-family: 'Courier New', monospace;
+      margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
     }
-
-    .app-card {
-      width: 90%;
-      max-width: 400px;
-      background: var(--card-bg);
-      border: 1px solid var(--matrix-green);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 0 20px rgba(0, 255, 102, 0.15), inset 0 0 10px rgba(0, 243, 255, 0.05);
-      position: relative;
+    .terminal {
+      width: 90%; max-width: 450px; background: var(--card);
+      border: 1px solid var(--matrix); border-radius: 4px; padding: 25px;
+      box-shadow: 0 0 15px var(--matrix-dim);
     }
-
-    .matrix-title {
-      color: var(--matrix-green);
-      font-size: 1.2rem;
-      text-transform: uppercase;
+    .header {
+      color: var(--matrix); font-size: 1.2rem; font-weight: bold;
+      text-align: center; margin-bottom: 20px; text-shadow: 0 0 5px var(--matrix);
       letter-spacing: 2px;
-      margin-bottom: 20px;
-      text-align: center;
-      text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
     }
-
-    .rainbow-button {
-      width: 100%;
-      padding: 16px;
-      font-size: 1rem;
-      font-weight: bold;
-      font-family: inherit;
-      color: #000;
-      background: linear-gradient(90deg, var(--matrix-green), var(--cyan-neon), var(--pink-neon), var(--btc-orange));
-      background-size: 300% 300%;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: all 0.3s ease;
-      animation: rainbowGlow 6s ease infinite;
+    input {
+      width: 100%; padding: 12px; margin-bottom: 15px;
+      background: #000; border: 1px dashed var(--cyan); color: var(--cyan);
+      font-family: inherit; font-size: 1rem; box-sizing: border-box; text-align: center;
     }
-
-    @keyframes rainbowGlow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    input:focus { outline: none; border-color: var(--matrix); box-shadow: 0 0 8px var(--matrix-dim); }
+    button {
+      width: 100%; padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
+      background: linear-gradient(90deg, var(--matrix), var(--cyan)); color: #000;
+      border: none; border-radius: 2px; text-transform: uppercase; transition: 0.2s;
     }
-
-    .address-box {
-      margin-top: 20px;
-      background: #000;
-      padding: 12px;
-      border: 1px dashed var(--cyan-neon);
-      border-radius: 6px;
-      word-break: break-all;
-      font-size: 0.8rem;
-      color: var(--cyan-neon);
+    button:hover { filter: brightness(1.2); }
+    .btn-danger { background: transparent; border: 1px solid var(--alert); color: var(--alert); margin-top: 10px; }
+    .btn-danger:hover { background: var(--alert); color: #000; }
+    .data-box {
+      background: #000; padding: 15px; border: 1px solid #333; margin: 15px 0;
+      word-break: break-all; color: var(--matrix); font-size: 0.9rem;
     }
-
-    .mnemonic-box {
-      margin-top: 15px;
-      background: #14050b;
-      padding: 12px;
-      border: 1px solid var(--pink-neon);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      color: var(--pink-neon);
-      display: none;
-    }
+    .warning { color: var(--alert); font-size: 0.8rem; text-align: center; margin-bottom: 15px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="app-card">
-    <div class="matrix-title">SYSTEM // ROOT_COIN</div>
-    
-    <div id="step-create">
-      <p style="font-size:0.85rem; color:#888;">NENHUM REGISTRO EXIGIDO. CHAVE GERADA NO SEU DISPOSITIVO.</p>
-      <button class="rainbow-button" onclick="createWallet()">[ CRIAR CARTEIRA CYPERPUNK ]</button>
-    </div>
+<div class="terminal">
+  <div class="header">SYS // ROOT_VAULT</div>
 
-    <div id="step-wallet" style="display:none;">
-      <p style="color:var(--matrix-green); font-size:0.9rem;">> CARTEIRA ATIVA (CELO / EVM / MULTICHAIN):</p>
-      <div class="address-box" id="user-address">0x...</div>
-      
-      <button class="rainbow-button" style="margin-top:20px;" onclick="toggleMnemonic()">
-        [ BACKUP DE 12 PALAVRAS ]
-      </button>
-
-      <div class="mnemonic-box" id="user-mnemonic"></div>
-    </div>
+  <!-- TELA 1: SETUP INICIAL -->
+  <div id="view-setup" class="hidden">
+    <div class="warning">NENHUM COFRE LOCAL ENCONTRADO.</div>
+    <input type="password" id="new-pin" placeholder="CRIE UM PIN DE 6 DÍGITOS">
+    <button onclick="generateAndEncrypt()">[ GERAR & CRIPTOGRAFAR SEED ]</button>
   </div>
 
-  <script>
-    function createWallet() {
-      // Gera carteira aleatória client-side via ethers.js (BIP-39)
-      const wallet = ethers.Wallet.createRandom();
+  <!-- TELA 2: DESBLOQUEIO -->
+  <div id="view-unlock" class="hidden">
+    <div style="text-align:center; color:var(--cyan); margin-bottom:15px;">COFRE LOCAL DETECTADO.</div>
+    <input type="password" id="unlock-pin" placeholder="INSIRA SEU PIN">
+    <button onclick="decryptAndLoad()">[ DESBLOQUEAR ]</button>
+    <div id="unlock-error" class="warning hidden" style="margin-top:10px;">PIN Incorreto ou Dados Corrompidos.</div>
+  </div>
 
-      document.getElementById('user-address').innerText = wallet.address;
-      document.getElementById('user-mnemonic').innerText = wallet.mnemonic.phrase;
+  <!-- TELA 3: PAINEL DA CARTEIRA -->
+  <div id="view-dashboard" class="hidden">
+    <div style="color:var(--cyan);">> ENDEREÇO PÚBLICO (EVM/CELO)</div>
+    <div class="data-box" id="wallet-address">0x...</div>
+    
+    <button onclick="document.getElementById('seed-box').classList.toggle('hidden')">[ REVELAR 12 PALAVRAS ]</button>
+    
+    <div id="seed-box" class="hidden data-box" style="border-color:var(--pink); color:var(--pink);">
+      <div class="warning" style="margin:0 0 10px 0;">ANOTE NO PAPEL. SE VOCÊ LIMPAR O CACHE DO NAVEGADOR, PERDERÁ O ACESSO.</div>
+      <span id="wallet-seed"></span>
+    </div>
 
-      // Armazena no localStorage do navegador do cliente
-      localStorage.setItem('pastel_priv_key', wallet.privateKey);
+    <button class="btn-danger" onclick="nukeVault()">[ DESTRUIR COFRE LOCAL ]</button>
+  </div>
+</div>
 
-      document.getElementById('step-create').style.display = 'none';
-      document.getElementById('step-wallet').style.display = 'block';
+<script>
+  // --- MOTOR CRIPTOGRÁFICO (Web Crypto API) ---
+  const cryptoAPI = window.crypto;
+
+  async function getDerivationKey(pin, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await cryptoAPI.subtle.importKey("raw", enc.encode(pin), {name: "PBKDF2"}, false, ["deriveKey"]);
+    return cryptoAPI.subtle.deriveKey(
+      {name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256"},
+      keyMaterial, {name: "AES-GCM", length: 256}, false, ["encrypt", "decrypt"]
+    );
+  }
+
+  async function encryptVault(secretText, pin) {
+    const enc = new TextEncoder();
+    const salt = cryptoAPI.getRandomValues(new Uint8Array(16));
+    const iv = cryptoAPI.getRandomValues(new Uint8Array(12));
+    const key = await getDerivationKey(pin, salt);
+    const cipher = await cryptoAPI.subtle.encrypt({name: "AES-GCM", iv: iv}, key, enc.encode(secretText));
+    
+    return JSON.stringify({
+      salt: Array.from(salt),
+      iv: Array.from(iv),
+      cipher: Array.from(new Uint8Array(cipher))
+    });
+  }
+
+  async function decryptVault(payload, pin) {
+    const data = JSON.parse(payload);
+    const salt = new Uint8Array(data.salt);
+    const iv = new Uint8Array(data.iv);
+    const cipher = new Uint8Array(data.cipher);
+    const key = await getDerivationKey(pin, salt);
+    
+    const decrypted = await cryptoAPI.subtle.decrypt({name: "AES-GCM", iv: iv}, key, cipher);
+    return new TextDecoder().decode(decrypted);
+  }
+
+  // --- LÓGICA DE INTERFACE ---
+  function show(id) {
+    document.querySelectorAll('.terminal > div[id]').forEach(el => el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  window.onload = () => {
+    if (localStorage.getItem('cypher_vault')) show('view-unlock');
+    else show('view-setup');
+  };
+
+  async function generateAndEncrypt() {
+    const pin = document.getElementById('new-pin').value;
+    if (pin.length < 4) return alert('O PIN precisa ter pelo menos 4 caracteres.');
+
+    // Gera as 12 palavras via ethers.js (Local e Seguro)
+    const wallet = ethers.Wallet.createRandom();
+    const seedPhrase = wallet.mnemonic.phrase;
+
+    // Encripta e salva
+    const encryptedPayload = await encryptVault(seedPhrase, pin);
+    localStorage.setItem('cypher_vault', encryptedPayload);
+
+    loadDashboard(wallet);
+  }
+
+  async function decryptAndLoad() {
+    const pin = document.getElementById('unlock-pin').value;
+    const payload = localStorage.getItem('cypher_vault');
+    try {
+      const seedPhrase = await decryptVault(payload, pin);
+      const wallet = ethers.Wallet.fromPhrase(seedPhrase);
+      loadDashboard(wallet);
+    } catch (e) {
+      document.getElementById('unlock-error').classList.remove('hidden');
     }
+  }
 
-    function toggleMnemonic() {
-      const box = document.getElementById('user-mnemonic');
-      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  function loadDashboard(wallet) {
+    document.getElementById('wallet-address').innerText = wallet.address;
+    document.getElementById('wallet-seed').innerText = wallet.mnemonic.phrase;
+    show('view-dashboard');
+  }
+
+  function nukeVault() {
+    if(confirm('ATENÇÃO: Se você não anotou as 12 palavras, seus fundos serão perdidos para sempre. Destruir?')) {
+      localStorage.removeItem('cypher_vault');
+      location.reload();
     }
-
-    // Auto-carrega caso já exista no celular do cliente
-    window.onload = function() {
-      const savedKey = localStorage.getItem('pastel_priv_key');
-      if (savedKey) {
-        const wallet = new ethers.Wallet(savedKey);
-        document.getElementById('user-address').innerText = wallet.address;
-        document.getElementById('user-mnemonic').innerText = "(Chave privada salva localmente no navegador)";
-        document.getElementById('step-create').style.display = 'none';
-        document.getElementById('step-wallet').style.display = 'block';
-      }
-    };
-  </script>
+  }
+</script>
 
 </body>
 </html>

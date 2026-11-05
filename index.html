@@ -3,18 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROOT VAULT // CELO NETWORK</title>
+  <title>ROOT VAULT // MULTI-ASSET CELO</title>
   
-  <!-- Ethers.js v6 (Web3 Engine) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-  <!-- QRCode.js (Gerador de QR Code) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <style>
     :root {
       --bg: #050505; --card: #0a0a0c;
       --matrix: #00ff66; --matrix-dim: rgba(0, 255, 102, 0.2);
-      --cyan: #00f3ff; --alert: #ff3333;
+      --cyan: #00f3ff; --alert: #ff3333; --usdt: #26a17b;
     }
     body {
       background: var(--bg); color: #ccc; font-family: 'Courier New', monospace;
@@ -29,20 +27,29 @@
       color: var(--matrix); font-size: 1.2rem; font-weight: bold; text-align: center; 
       text-shadow: 0 0 5px var(--matrix); letter-spacing: 2px; border-bottom: 1px dashed #333; padding-bottom: 10px;
     }
-    input {
+    input, select {
       width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: var(--cyan);
-      font-family: inherit; box-sizing: border-box; text-align: center; margin-bottom: 10px;
+      font-family: inherit; font-size: 1rem; box-sizing: border-box; text-align: center; margin-bottom: 10px;
+      appearance: none;
     }
-    input:focus { outline: none; border-color: var(--matrix); }
+    input:focus, select:focus { outline: none; border-color: var(--matrix); }
     button {
       width: 100%; padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
-      background: #111; color: var(--matrix); border: 1px solid var(--matrix); transition: 0.2s;
+      background: #111; color: var(--matrix); border: 1px solid var(--matrix); transition: 0.2s; text-transform: uppercase;
     }
     button:hover { background: var(--matrix); color: #000; }
     .btn-action { background: linear-gradient(90deg, var(--matrix), var(--cyan)); color: #000; border: none; }
     .btn-action:hover { filter: brightness(1.2); }
     .data-box { background: #000; padding: 12px; border: 1px solid #333; word-break: break-all; color: var(--cyan); font-size: 0.85rem; text-align: center;}
-    .balance-display { font-size: 2rem; color: var(--matrix); text-align: center; text-shadow: 0 0 8px var(--matrix-dim); }
+    
+    /* Layout de Saldos */
+    .balances { display: flex; justify-content: space-around; margin: 10px 0; }
+    .asset-box { text-align: center; }
+    .asset-name { font-size: 0.8rem; color: #888; }
+    .asset-value { font-size: 1.6rem; font-weight: bold; }
+    .val-celo { color: var(--matrix); text-shadow: 0 0 8px var(--matrix-dim); }
+    .val-usdt { color: var(--usdt); text-shadow: 0 0 8px rgba(38, 161, 123, 0.4); }
+
     .hidden { display: none !important; }
     #qrcode { display: flex; justify-content: center; margin: 15px 0; padding: 10px; background: #fff; border-radius: 4px; }
   </style>
@@ -61,20 +68,36 @@
 
   <!-- PAINEL OPERACIONAL -->
   <div id="view-dashboard" class="hidden">
-    <div style="text-align:center; color:#888; font-size:0.8rem;">SALDO NA REDE CELO</div>
-    <div class="balance-display" id="display-balance">0.0000</div>
-    <button onclick="updateBalance()" style="padding: 8px; margin-bottom:15px;">[ ATUALIZAR SALDO ]</button>
+    
+    <div class="balances">
+      <div class="asset-box">
+        <div class="asset-name">CELO</div>
+        <div class="asset-value val-celo" id="bal-celo">0.000</div>
+      </div>
+      <div class="asset-box">
+        <div class="asset-name">USDT</div>
+        <div class="asset-value val-usdt" id="bal-usdt">0.00</div>
+      </div>
+    </div>
+    <button onclick="updateBalances()" style="padding: 8px; margin-bottom:15px; font-size:0.8rem;">[ ATUALIZAR SALDOS ]</button>
 
     <div style="border:1px dashed #333; padding:15px; margin-bottom:15px;">
-      <div style="text-align:center; color:var(--cyan);">> RECEBER (ENDEREÇO PÚBLICO)</div>
+      <div style="text-align:center; color:var(--cyan);">> ENDEREÇO DE RECEBIMENTO</div>
+      <div style="text-align:center; font-size:0.7rem; color:#888;">(Aceita CELO e USDT na rede Celo)</div>
       <div id="qrcode"></div>
       <div class="data-box" id="wallet-address">0x...</div>
     </div>
 
     <div style="border:1px dashed #333; padding:15px; margin-bottom:15px;">
-      <div style="text-align:center; color:var(--alert); margin-bottom:10px;">> ENVIAR CELO</div>
+      <div style="text-align:center; color:var(--alert); margin-bottom:10px;">> TRANSMITIR ATIVO</div>
+      
+      <select id="tx-asset">
+        <option value="celo">Mudar ativo: CELO</option>
+        <option value="usdt">Mudar ativo: USDT (Celo Network)</option>
+      </select>
+
       <input type="text" id="tx-to" placeholder="Endereço Destino (0x...)">
-      <input type="number" id="tx-amount" placeholder="Quantia (ex: 1.5)" step="any">
+      <input type="number" id="tx-amount" placeholder="Quantia (ex: 5.50)" step="any">
       <button class="btn-action" onclick="sendTransaction()" id="btn-send">[ ASSINAR E ENVIAR ]</button>
     </div>
 
@@ -83,12 +106,19 @@
 </div>
 
 <script>
-  // --- CONFIGURAÇÃO WEB3 ---
-  // Conecta diretamente ao Nó Público da Celo
+  // --- CONFIGURAÇÃO WEB3 E CONTRATOS ---
   const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
   let activeWallet = null;
 
-  // --- MOTOR CRIPTOGRÁFICO AES-GCM (Sem dependências externas) ---
+  // Endereço e ABI mínimos do USDT na Celo
+  const USDT_ADDRESS = "0x48065fbBE25f71C9282ddf5e1cD6D6A8824272d4";
+  const ERC20_ABI = [
+    "function balanceOf(address owner) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+    "function transfer(address to, uint amount) returns (bool)"
+  ];
+
+  // --- MOTOR CRIPTOGRÁFICO AES-GCM ---
   const cryptoAPI = window.crypto;
   async function getDerivationKey(pin, salt) {
     const enc = new TextEncoder();
@@ -110,7 +140,7 @@
     return new TextDecoder().decode(decrypted);
   }
 
-  // --- LÓGICA DE INTERFACE E AUTENTICAÇÃO ---
+  // --- LÓGICA DE INTERFACE ---
   window.onload = () => {
     const msg = document.getElementById('auth-msg');
     msg.innerText = localStorage.getItem('root_key') ? "> COFRE DETECTADO. INSIRA O PIN PARA ABRIR." : "> NOVO DISPOSITIVO. CRIE UM PIN PARA GERAR CHAVES.";
@@ -124,13 +154,11 @@
     
     try {
       if (!vault) {
-        // Gera nova carteira localmente
         const wallet = ethers.Wallet.createRandom();
         localStorage.setItem('root_key', await encryptData(wallet.privateKey, pin));
-        alert("Guarde suas 12 palavras em papel!\n\n" + wallet.mnemonic.phrase);
+        alert("CRÍTICO: Anote estas 12 palavras. Se perder, perde o dinheiro:\n\n" + wallet.mnemonic.phrase);
         activeWallet = wallet.connect(provider);
       } else {
-        // Desbloqueia cofre existente
         const privKey = await decryptData(vault, pin);
         activeWallet = new ethers.Wallet(privKey, provider);
       }
@@ -147,54 +175,74 @@
     const address = activeWallet.address;
     document.getElementById('wallet-address').innerText = address;
     
-    // Gera o QR Code visual para leitura
+    document.getElementById('qrcode').innerHTML = "";
     new QRCode(document.getElementById("qrcode"), {
       text: address, width: 130, height: 130,
       colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M
     });
 
-    updateBalance();
+    updateBalances();
   }
 
-  // --- FUNÇÕES BLOCKCHAIN (Ler e Escrever) ---
-  async function updateBalance() {
+  // --- FUNÇÕES BLOCKCHAIN MULTI-ASSET ---
+  async function updateBalances() {
     try {
-      document.getElementById('display-balance').innerText = "Lendo rede...";
-      // Consulta a blockchain da Celo e formata o resultado
+      document.getElementById('bal-celo').innerText = "...";
+      document.getElementById('bal-usdt').innerText = "...";
+
+      // LER CELO NATIVO (18 decimais)
       const balanceWei = await provider.getBalance(activeWallet.address);
-      const balanceCelo = ethers.formatEther(balanceWei);
-      document.getElementById('display-balance').innerText = parseFloat(balanceCelo).toFixed(4);
+      document.getElementById('bal-celo').innerText = parseFloat(ethers.formatEther(balanceWei)).toFixed(4);
+
+      // LER USDT (Contrato ERC-20)
+      const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
+      const usdtRaw = await usdtContract.balanceOf(activeWallet.address);
+      const usdtDecimals = await usdtContract.decimals(); // USDT costuma usar 6 decimais, não 18
+      document.getElementById('bal-usdt').innerText = parseFloat(ethers.formatUnits(usdtRaw, usdtDecimals)).toFixed(2);
+
     } catch (e) {
-      document.getElementById('display-balance').innerText = "ERRO_REDE";
+      document.getElementById('bal-celo').innerText = "ERR";
+      document.getElementById('bal-usdt').innerText = "ERR";
     }
   }
 
   async function sendTransaction() {
     const btn = document.getElementById('btn-send');
+    const asset = document.getElementById('tx-asset').value;
     const to = document.getElementById('tx-to').value.trim();
     const amount = document.getElementById('tx-amount').value;
 
-    if (!ethers.isAddress(to) || !amount || amount <= 0) return alert("Parâmetros inválidos.");
+    if (!ethers.isAddress(to) || !amount || amount <= 0) return alert("Endereço ou quantia inválidos.");
 
     try {
-      btn.innerText = "[ PROCESSANDO... ]";
+      btn.innerText = "[ ASSINANDO... ]";
+      let tx;
+
+      if (asset === 'celo') {
+        // Envio de CELO Nativo
+        tx = await activeWallet.sendTransaction({
+          to: to,
+          value: ethers.parseEther(amount.toString())
+        });
+      } else {
+        // Envio de USDT ERC-20 (Interação com Smart Contract)
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, activeWallet);
+        const decimals = await usdtContract.decimals();
+        const parsedAmount = ethers.parseUnits(amount.toString(), decimals);
+        
+        // A chamada "transfer" gera a transação na rede
+        tx = await usdtContract.transfer(to, parsedAmount);
+      }
       
-      // Cria, assina e envia a transação para a rede (A Mágica Cypherpunk)
-      const tx = await activeWallet.sendTransaction({
-        to: to,
-        value: ethers.parseEther(amount)
-      });
+      btn.innerText = "[ TRANSMITIDO. AGUARDE... ]";
+      await tx.wait(); // Aguarda mineração
       
-      alert("Transação transmitida! Aguardando mineração da rede...\n\nTxHash:\n" + tx.hash);
-      
-      // Aguarda 1 confirmação na blockchain da Celo (geralmente leva ~3 a 5 segundos)
-      await tx.wait();
-      
-      alert("Transação confirmada na blockchain com sucesso!");
+      alert("Sucesso! Transação confirmada no bloco.");
       document.getElementById('tx-amount').value = '';
-      updateBalance();
+      updateBalances();
     } catch (e) {
-      alert("Falha na transação: " + e.message);
+      console.error(e);
+      alert("Falha: " + (e.reason || e.message));
     } finally {
       btn.innerText = "[ ASSINAR E ENVIAR ]";
     }
